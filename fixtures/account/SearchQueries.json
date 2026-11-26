@@ -1,0 +1,7 @@
+[
+  { "platform": "ANDROID", "searchTime": "2025-12-03T01:00:00.000Z[UTC]", "searchQuery": "fa", "searchInteractionURIs": [] },
+  { "platform": "ANDROID", "searchTime": "2025-12-03T01:00:04.000Z[UTC]", "searchQuery": "fake song", "searchInteractionURIs": [] },
+  { "platform": "windows", "searchTime": "2025-12-08T15:00:00.000Z[UTC]", "searchQuery": "Fake Song", "searchInteractionURIs": [] },
+  { "platform": "", "searchTime": "2025-12-09T15:00:00.000Z[UTC]", "searchQuery": "mock beat", "searchInteractionURIs": [] },
+  { "platform": "ANDROID", "searchTime": "2026-01-10T15:00:00.000Z[UTC]", "searchQuery": "lorem", "searchInteractionURIs": [] }
+]

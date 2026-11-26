@@ -1,0 +1,11 @@
+{
+  "tracks": [
+    { "artist": "Null Pointer", "album": "Core Dump", "track": "Segfault Serenade", "uri": "spotify:track:fakeSegfault0000000001" }
+  ],
+  "albums": [{ "artist": "Null Pointer", "album": "Core Dump", "uri": "spotify:album:fakeCoreDump00000000001" }],
+  "shows": [{ "name": "The Fake Podcast", "publisher": "Nobody Inc.", "uri": "spotify:show:fakeShow000000000000001" }],
+  "episodes": [],
+  "bannedTracks": [],
+  "artists": [{ "name": "Null Pointer", "uri": "spotify:artist:fakeNullPointer0000001" }],
+  "bannedArtists": []
+}
