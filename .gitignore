@@ -1,0 +1,28 @@
+# Personal Spotify data, never commit
+data/raw/
+data/cache/
+src/generated/
+public/data/
+*.zip
+**/StreamingHistory*.json
+**/Streaming_History*.json
+**/Spotify Account Data/
+**/Spotify Extended Streaming History/
+**/my_spotify_data*/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Standard
+node_modules/
+dist/
+.DS_Store
+.claude/settings.local.json
+
+# Misc
+*.log
+coverage/
+.vite/
+Thumbs.db

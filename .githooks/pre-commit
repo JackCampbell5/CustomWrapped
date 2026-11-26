@@ -1,0 +1,44 @@
+#!/bin/sh
+# Safety hook: block commits containing personal Spotify data or secrets.
+# Enable with: git config core.hooksPath .githooks
+
+fail=0
+
+# 1. Blocked paths / filenames
+blocked=$(git diff --cached --name-only --diff-filter=ACMR | grep -E \
+  -e '(^|/)data/raw/' \
+  -e '(^|/)data/cache/' \
+  -e '(^|/)src/generated/' \
+  -e '(^|/)public/data/' \
+  -e '(^|/)\.env($|\.)' \
+  -e '(^|/)StreamingHistory[^/]*$' \
+  -e '(^|/)Streaming_History[^/]*$' \
+  -e '\.zip$' \
+  | grep -v -E '(^|/)\.env\.example$')
+
+if [ -n "$blocked" ]; then
+  echo "pre-commit: refusing to commit personal data or secret files:" >&2
+  echo "$blocked" | sed 's/^/  - /' >&2
+  fail=1
+fi
+
+# 2. Secret-looking content in added lines (never prints the matched value)
+#    - SPOTIFY_CLIENT_SECRET / CLIENT_ID assigned a real value
+#    - 32-char hex strings (Spotify client id/secret format)
+#    - access/refresh token assignments with long values
+#    - Bearer tokens
+pattern='(SPOTIFY_CLIENT_(SECRET|ID)[[:space:]]*[=:][[:space:]]*["'"'"']?[A-Za-z0-9]{16,})|(\b[0-9a-f]{32}\b)|((access|refresh)_?token["'"'"']?[[:space:]]*[=:][[:space:]]*["'"'"']?[A-Za-z0-9_-]{40,})|(Bearer[[:space:]]+[A-Za-z0-9_-]{40,})'
+
+for f in $(git diff --cached --name-only --diff-filter=ACMR); do
+  if git diff --cached -U0 -- "$f" | grep -E '^\+' | grep -v -E '^\+\+\+' | grep -q -i -E "$pattern"; then
+    echo "pre-commit: '$f' contains something that looks like a Spotify secret or token." >&2
+    fail=1
+  fi
+done
+
+if [ "$fail" -ne 0 ]; then
+  echo "pre-commit: commit blocked. Unstage the file(s) above (git restore --staged <file>)." >&2
+  exit 1
+fi
+
+exit 0
