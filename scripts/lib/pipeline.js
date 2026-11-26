@@ -3,6 +3,7 @@ import { adaptRows } from './adapters.js';
 import { dedupPlays } from './dedup.js';
 import { computeStats, buildGlobals, buildLookup } from './aggregate.js';
 import { flattenPlaylists, buildLocalCatalog, applyCatalog, scopedBonus, globalBonus } from './bonus.js';
+import { computeEnriched } from './enrich.js';
 
 /** raw (from loadRaw) -> normalized, deduped, locally-enriched plays + a report. */
 export function preparePlays(raw) {
@@ -28,7 +29,7 @@ export function preparePlays(raw) {
  * Build every output document.
  * @param {ReturnType<typeof preparePlays>} prepared
  * @param {object} raw  loadRaw() result (for bonus files)
- * @param {{ meta?: any, now?: Date }} [opts]
+ * @param {{ now?: Date }} [opts]
  */
 export function buildOutputs({ plays, playlists, report }, raw, opts = {}) {
   const globals = buildGlobals(plays);
@@ -39,11 +40,11 @@ export function buildOutputs({ plays, playlists, report }, raw, opts = {}) {
   for (const year of years) {
     const scope = { id: String(year), year };
     const scoped = plays.filter((p) => p.year === year);
-    stats[scope.id] = { ...computeStats(scoped, { scope, globals, meta: opts.meta }), bonus: scopedBonus(scope, bonusInputs) };
+    stats[scope.id] = { ...computeStats(scoped, { scope, globals }), bonus: scopedBonus(scope, bonusInputs), enriched: null };
   }
   if (plays.length) {
     const scope = { id: 'all' };
-    stats.all = { ...computeStats(plays, { scope, globals, meta: opts.meta }), bonus: scopedBonus(scope, bonusInputs) };
+    stats.all = { ...computeStats(plays, { scope, globals }), bonus: scopedBonus(scope, bonusInputs), enriched: null };
   }
 
   const index = {
@@ -51,7 +52,7 @@ export function buildOutputs({ plays, playlists, report }, raw, opts = {}) {
     timeZone: TIME_ZONE,
     generatedAt: (opts.now ?? new Date()).toISOString(),
     hasExtended: plays.some((p) => p.source === 'extended'),
-    hasEnrichment: Boolean(opts.meta),
+    hasEnrichment: false,
     scopes: [
       ...years.map((y) => summarize(stats[String(y)])),
       ...(stats.all ? [summarize(stats.all)] : []),
@@ -67,6 +68,19 @@ export function buildOutputs({ plays, playlists, report }, raw, opts = {}) {
   };
 
   return { index, stats, lookup: buildLookup(plays) };
+}
+
+/** Add enrichment-derived sections (genres, decades, explicit...) to already-built outputs. */
+export function attachEnrichment(outputs, plays, meta) {
+  if (!meta) return outputs;
+  for (const [id, s] of Object.entries(outputs.stats)) {
+    const scoped = id === 'all' ? plays : plays.filter((p) => String(p.year) === id);
+    s.enriched = computeEnriched(scoped, meta);
+  }
+  outputs.index.hasEnrichment = true;
+  outputs.index.enrichmentCounts = meta.counts;
+  for (const sc of outputs.index.scopes) sc.topGenre = outputs.stats[sc.id]?.enriched?.topGenre ?? null;
+  return outputs;
 }
 
 function summarize(s) {
