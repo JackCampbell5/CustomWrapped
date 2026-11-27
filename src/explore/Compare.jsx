@@ -74,14 +74,8 @@ export default function Compare({ index }) {
   const { data: sb } = useJson(years.length >= 2 && b ? `stats-${b}` : null);
   const c = useMemo(() => (sa && sb && a !== b ? compareYears(sa, sb) : null), [sa, sb, a, b]);
 
-  if (years.length < 2) {
-    return (
-      <Empty>
-        You have one year of data so far. Add your Extended streaming history (lifetime) to data/raw/ and re-run <code>npm run build:data</code>, and this turns
-        into a year-by-year face-off.
-      </Empty>
-    );
-  }
+  // Explore only renders this when index.canCompare (two or more years with 6+ months of data).
+  if (years.length < 2) return null;
 
   const select = (value, set, label) => (
     <label className="flex items-center gap-2 text-sm text-[#9c9c9c]">

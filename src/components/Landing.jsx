@@ -70,6 +70,12 @@ export default function Landing({ index }) {
               <span className={sel.coverage?.partial ? 'text-[#ffd23f]' : 'text-white/60'}>{coverageNote(sel.coverage, sel.id)}</span>
             </p>
           )}
+          {index.hiddenYears?.length > 0 && (
+            <p className="mt-2 text-sm text-white/50">
+              {index.hiddenYears.map((h) => `${h.year} (${h.spanDays} days)`).join(', ')} {index.hiddenYears.length === 1 ? 'is' : 'are'} hidden until there's at least 6
+              months of data, but still counted in All time.
+            </p>
+          )}
         </section>
 
         <div className="flex flex-wrap gap-3">

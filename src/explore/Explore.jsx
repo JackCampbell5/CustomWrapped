@@ -60,9 +60,11 @@ export default function Explore({ index, scopeId }) {
               <Search picked={picked} />
             </Section>
 
-            <Section id="compare" title="Year vs. year" subtitle="Rank changes, minutes and habit shifts between any two years.">
-              <Compare index={index} />
-            </Section>
+            {index.canCompare && (
+              <Section id="compare" title="Year vs. year" subtitle="Rank changes, minutes and habit shifts between any two years.">
+                <Compare index={index} />
+              </Section>
+            )}
 
             <Bonus s={s} index={index} />
             <footer className="pb-10 text-xs text-[#9c9c9c]">
