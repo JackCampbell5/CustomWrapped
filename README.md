@@ -103,7 +103,9 @@ data/raw/*.json ─► adapters (account | extended) ─► one Play shape, Amer
 
 - A **stream** is a play of 30 seconds or more. Total minutes count all playback.
 - Account-data skips are inferred (plays under 30s). Extended data uses Spotify's real `skipped` / `reason_end`.
-- Partial years are labeled (e.g. "Partial year: data starts Nov 2025"), and year-over-year shows minutes per covered day.
+- A year only gets its own Wrapped if its data spans at least 6 months (183 days, first to last listening day; `MIN_YEAR_SPAN_DAYS` in `scripts/lib/config.js`). Shorter years are hidden but still count toward All time, search history and first-played dates.
+- Year-over-year appears only once two or more years pass that rule (e.g. after adding the extended history).
+- Shown years that are still partial are labeled (e.g. "Data runs through Nov 23"), and year-over-year shows minutes per covered day.
 - "Top X% of listeners" is a playful, made-up number and is labeled that way in the app.
 
 Story controls: tap the right side or press →/Space for next, tap the left side or press ← for back, hold to pause, **P** pause/resume, **Esc** close. Slide length is set under *Settings & data* on the start page. `?slide=N` (e.g. `/?slide=5#/story/2026`) opens a specific slide, paused.
