@@ -1,7 +1,7 @@
-import { APP_NAME, TIME_ZONE } from './config.js';
+import { APP_NAME, MIN_YEAR_SPAN_DAYS, TIME_ZONE } from './config.js';
 import { adaptRows } from './adapters.js';
 import { dedupPlays } from './dedup.js';
-import { computeStats, buildGlobals, buildLookup } from './aggregate.js';
+import { computeStats, buildGlobals, buildLookup, coverageFor } from './aggregate.js';
 import { flattenPlaylists, buildLocalCatalog, applyCatalog, scopedBonus, globalBonus } from './bonus.js';
 import { computeEnriched } from './enrich.js';
 
@@ -29,17 +29,28 @@ export function preparePlays(raw) {
  * Build every output document.
  * @param {ReturnType<typeof preparePlays>} prepared
  * @param {object} raw  loadRaw() result (for bonus files)
- * @param {{ now?: Date }} [opts]
+ * @param {{ now?: Date, minYearSpanDays?: number }} [opts]
+ *   minYearSpanDays: years whose data spans fewer days are hidden (no stats file, not in the picker).
+ *   Their plays still count toward "all", search history and first-played dates.
  */
 export function buildOutputs({ plays, playlists, report }, raw, opts = {}) {
+  const minSpan = opts.minYearSpanDays ?? MIN_YEAR_SPAN_DAYS;
   const globals = buildGlobals(plays);
-  const years = [...new Set(plays.map((p) => p.year))].sort((a, b) => a - b);
+  const allYears = [...new Set(plays.map((p) => p.year))].sort((a, b) => a - b);
   const bonusInputs = { searches: raw.searches, playlists };
 
   const stats = {};
-  for (const year of years) {
+  const years = [];
+  const hiddenYears = [];
+  for (const year of allYears) {
     const scope = { id: String(year), year };
     const scoped = plays.filter((p) => p.year === year);
+    const cov = coverageFor(scope, scoped);
+    if (cov.spanDays < minSpan) {
+      hiddenYears.push({ year, spanDays: cov.spanDays, first: cov.first, last: cov.last });
+      continue;
+    }
+    years.push(year);
     stats[scope.id] = { ...computeStats(scoped, { scope, globals }), bonus: scopedBonus(scope, bonusInputs), enriched: null };
   }
   if (plays.length) {
@@ -57,6 +68,10 @@ export function buildOutputs({ plays, playlists, report }, raw, opts = {}) {
       ...years.map((y) => summarize(stats[String(y)])),
       ...(stats.all ? [summarize(stats.all)] : []),
     ],
+    hiddenYears,
+    minYearSpanDays: minSpan,
+    // Year-over-year needs at least two years that pass the span rule.
+    canCompare: years.length >= 2,
     report: {
       files: report.files.map(({ file, format, rows, plays: n, dropped }) => ({ file, format, rows, plays: n, dropped })),
       droppedRows: report.droppedRows,

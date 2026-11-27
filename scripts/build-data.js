@@ -109,6 +109,10 @@ async function main() {
     const note = c?.partial ? `partial: ${c.first} → ${c.last}, ${c.pctCovered}% of year` : `${c.first} → ${c.last}`;
     log(`  ${String(s.id).padEnd(5)} ${String(Math.round(s.minutes)).padStart(7)} min  ${String(s.streams).padStart(6)} streams  top: ${s.topArtist ?? '-'}  (${note})`);
   }
+  for (const hy of outputs.index.hiddenYears) {
+    log(`  ${String(hy.year).padEnd(5)} hidden: only ${hy.spanDays} days of data (${hy.first} → ${hy.last}); needs ${outputs.index.minYearSpanDays}. Still counted in "all".`);
+  }
+  log(`  year-over-year: ${outputs.index.canCompare ? 'on' : 'off (needs two years with 6+ months of data)'}`);
   log(`\nWrote ${path.relative(root, outDir)}/: ${written.join(', ')}`);
   log(`Done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 }

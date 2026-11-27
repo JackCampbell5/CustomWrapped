@@ -26,7 +26,7 @@ describe('compareYears on fixtures (2024 -> 2025)', () => {
   let c;
   beforeAll(() => {
     const raw = loadRaw(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../fixtures'));
-    const { stats } = buildOutputs(preparePlays(raw), raw);
+    const { stats } = buildOutputs(preparePlays(raw), raw, { minYearSpanDays: 0 });
     c = compareYears(stats['2024'], stats['2025']);
   });
 

@@ -20,5 +20,11 @@ export const DEDUP_WINDOW_MS = 90_000;
 /** Length of the precomputed top lists. */
 export const TOP_N = 50;
 
+/**
+ * A year is shown (year picker, story, Explore, year-over-year) only if its data spans at least
+ * this many days, first to last listening day. Hidden years still count toward "All time".
+ */
+export const MIN_YEAR_SPAN_DAYS = 183;
+
 /** Minimum total listening (music + podcasts) for a day to count toward a streak. */
 export const STREAK_MIN_MS = 60_000;

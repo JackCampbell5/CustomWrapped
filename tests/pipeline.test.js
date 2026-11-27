@@ -15,7 +15,8 @@ let all;
 
 beforeAll(() => {
   const raw = loadRaw(fixtures);
-  out = buildOutputs(preparePlays(raw), raw, { now: new Date('2026-01-01T00:00:00Z') });
+  // Fixture years are short; turn off the 6-month visibility rule to test the stats themselves.
+  out = buildOutputs(preparePlays(raw), raw, { now: new Date('2026-01-01T00:00:00Z'), minYearSpanDays: 0 });
   ({ 2024: s2024, 2025: s2025, 2026: s2026, all } = out.stats);
 });
 
@@ -33,6 +34,34 @@ describe('loading and dedup', () => {
   it('buckets years by local time (2026-01-01 04:30Z belongs to 2025)', () => {
     expect(out.index.scopes.map((s) => s.id)).toEqual(['2024', '2025', '2026', 'all']);
     expect(s2025.coverage.last).toBe('2025-12-31');
+  });
+});
+
+describe('year visibility (6-month rule)', () => {
+  it('hides short years but keeps their plays in all time, lookup and first-played dates', () => {
+    const raw = loadRaw(fixtures);
+    const o = buildOutputs(preparePlays(raw), raw, { minYearSpanDays: 183 });
+    // fixture spans: 2024 = 48 days, 2025 = 31, 2026 = 44
+    expect(o.index.scopes.map((s) => s.id)).toEqual(['all']);
+    expect(o.index.hiddenYears.map((h) => [h.year, h.spanDays])).toEqual([
+      [2024, 48],
+      [2025, 31],
+      [2026, 44],
+    ]);
+    expect(o.index.canCompare).toBe(false);
+    expect(Object.keys(o.stats)).toEqual(['all']);
+    expect(o.stats.all.totals.streams).toBe(17);
+    expect(o.lookup.tracks.find((t) => t.n === 'Segfault Serenade').f).toBe('2024-08-01');
+  });
+
+  it('a year exactly at the threshold is shown; YoY needs two shown years', () => {
+    const raw = loadRaw(fixtures);
+    const o = buildOutputs(preparePlays(raw), raw, { minYearSpanDays: 44 });
+    expect(o.index.scopes.map((s) => s.id)).toEqual(['2024', '2026', 'all']);
+    expect(o.index.canCompare).toBe(true);
+    const one = buildOutputs(preparePlays(raw), raw, { minYearSpanDays: 45 });
+    expect(one.index.scopes.map((s) => s.id)).toEqual(['2024', 'all']);
+    expect(one.index.canCompare).toBe(false);
   });
 });
 
